@@ -33,7 +33,7 @@ This document describes the Python sandbox implementation using Pyodide for in-b
 ### Basic Python Execution
 
 ```typescript
-import { PythonSandbox } from 'ai-code-sandbox';
+import { PythonSandbox } from 'code-container';
 
 const sandbox = new PythonSandbox();
 await sandbox.create();

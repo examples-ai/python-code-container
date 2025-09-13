@@ -1,4 +1,4 @@
-# AI Code Sandbox
+# Code Container
 
 A TypeScript library for running Node.js and Python code in isolated browser environments.
 
@@ -16,9 +16,9 @@ A TypeScript library for running Node.js and Python code in isolated browser env
 ## Installation
 
 ```bash
-npm install ai-code-sandbox
+npm install code-container
 # or
-pnpm add ai-code-sandbox
+pnpm add code-container
 ```
 
 ## Quick Start
@@ -26,7 +26,7 @@ pnpm add ai-code-sandbox
 ### Node.js Sandbox
 
 ```typescript
-import { NodeSandbox } from 'ai-code-sandbox';
+import { NodeSandbox } from 'code-container';
 
 const sandbox = new NodeSandbox();
 await sandbox.create();
@@ -55,7 +55,7 @@ await sandbox.destroy();
 ### Python Sandbox
 
 ```typescript
-import { PythonSandbox } from 'ai-code-sandbox';
+import { PythonSandbox } from 'code-container';
 
 const sandbox = new PythonSandbox();
 await sandbox.create();
@@ -165,7 +165,7 @@ import {
   PythonFileSystemExtension, 
   PythonGlobalsExtension,
   PythonInteropExtension 
-} from 'ai-code-sandbox';
+} from 'code-container';
 
 // Node.js process management
 const nodeExt = new NodeProcessExtension(sandbox.getRuntime());

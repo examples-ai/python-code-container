@@ -35,7 +35,7 @@ This document describes the Node.js sandbox implementation using WebContainer fo
 ### Basic Node.js Execution
 
 ```typescript
-import { NodeSandbox } from 'ai-code-sandbox';
+import { NodeSandbox } from 'code-container';
 
 const sandbox = new NodeSandbox();
 await sandbox.create();

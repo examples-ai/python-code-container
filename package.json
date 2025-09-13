@@ -1,7 +1,7 @@
 {
-  "name": "ai-code-sandbox",
+  "name": "code-container",
   "version": "1.0.0",
-  "description": "",
+  "description": "A browser-based code execution environment with TypeScript, Python, and Node.js support",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -28,13 +28,16 @@
     "clean": "rm -rf dist"
   },
   "keywords": [
+    "code-container",
     "sandbox",
     "webcontainer",
     "pyodide",
     "python",
     "javascript",
     "typescript",
-    "vite"
+    "browser",
+    "execution",
+    "middleware"
   ],
   "author": "Jimmy Moon <ragingwind@gmail.com>",
   "license": "MIT",
