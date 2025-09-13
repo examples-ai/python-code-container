@@ -28,6 +28,6 @@ export default defineConfig({
   test: {
     environment: 'node',
     exclude: ['**/browser.test.ts', '**/node_modules/**'],
-    include: ['tests/sandbox.test.ts']
+    include: ['tests/container.test.ts']
   }
 })

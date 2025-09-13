@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { NodeSandbox, TypeScriptMiddleware } from '../src/index';
+import { NodeContainer, TypeScriptMiddleware } from '../src/index';
 
-// NodeSandbox browser E2E tests using Vitest browser mode with Playwright
-describe('NodeSandbox Browser Tests', () => {
-  let sandbox: NodeSandbox;
+// NodeContainer browser E2E tests using Vitest browser mode with Playwright
+describe('NodeContainer Browser Tests', () => {
+  let container: NodeContainer;
 
   beforeEach(() => {
-    sandbox = new NodeSandbox();
+    container = new NodeContainer();
   });
 
   it('should be properly instantiated in browser environment', () => {
@@ -14,28 +14,28 @@ describe('NodeSandbox Browser Tests', () => {
     expect(typeof window).toBe('object');
     expect(typeof document).toBe('object');
 
-    // NodeSandbox should be instantiable in browser
-    expect(sandbox).toBeDefined();
-    expect(sandbox).toBeInstanceOf(NodeSandbox);
+    // NodeContainer should be instantiable in browser
+    expect(container).toBeDefined();
+    expect(container).toBeInstanceOf(NodeContainer);
   });
 
   it('should require cross-origin isolation for WebContainer functionality', async () => {
     // WebContainer requires proper cross-origin isolation which test environments often lack
-    // This test verifies the sandbox properly detects this requirement
+    // This test verifies the container properly detects this requirement
 
     try {
-      await sandbox.create();
+      await container.create();
 
       // If we get here, cross-origin isolation is properly set up
-      expect(sandbox.getLastError()).toBeNull();
+      expect(container.getLastError()).toBeNull();
 
       // Test basic file operations
-      await sandbox.writeFile('/test.txt', 'Hello WebContainer!');
-      const content = await sandbox.readFile('/test.txt');
+      await container.writeFile('/test.txt', 'Hello WebContainer!');
+      const content = await container.readFile('/test.txt');
       expect(content).toBe('Hello WebContainer!');
 
       // Test code execution
-      const result = await sandbox.run(
+      const result = await container.run(
         'console.log("Hello from WebContainer"); 42;'
       );
       expect(result).toBeDefined();
@@ -46,7 +46,7 @@ describe('NodeSandbox Browser Tests', () => {
       );
 
       // The error should be properly tracked
-      expect(sandbox.getLastError()).toBe(error);
+      expect(container.getLastError()).toBe(error);
 
       console.log(
         '✅ WebContainer correctly requires cross-origin isolation:',
@@ -58,33 +58,33 @@ describe('NodeSandbox Browser Tests', () => {
   it('should handle WebContainer creation errors gracefully', async () => {
     // Test error handling when WebContainer cannot be initialized
     try {
-      await sandbox.create();
+      await container.create();
       // If successful, great! Test some basic functionality
-      expect(sandbox.getLastError()).toBeNull();
+      expect(container.getLastError()).toBeNull();
     } catch (error: any) {
       // If it fails, it should be due to environment constraints
       expect(error).toBeInstanceOf(Error);
-      expect(sandbox.getLastError()).toBe(error);
+      expect(container.getLastError()).toBe(error);
       expect(error.message).not.toBe('');
     }
   });
 
   it('should have WebContainer-specific methods available', () => {
-    // Test that NodeSandbox has the expected API surface
-    expect(typeof sandbox.create).toBe('function');
-    expect(typeof sandbox.destroy).toBe('function');
-    expect(typeof sandbox.run).toBe('function');
-    expect(typeof sandbox.writeFile).toBe('function');
-    expect(typeof sandbox.readFile).toBe('function');
-    expect(typeof sandbox.installPackage).toBe('function');
-    expect(typeof sandbox.getLastError).toBe('function');
+    // Test that NodeContainer has the expected API surface
+    expect(typeof container.create).toBe('function');
+    expect(typeof container.destroy).toBe('function');
+    expect(typeof container.run).toBe('function');
+    expect(typeof container.writeFile).toBe('function');
+    expect(typeof container.readFile).toBe('function');
+    expect(typeof container.installPackage).toBe('function');
+    expect(typeof container.getLastError).toBe('function');
   });
 
   it('should execute TypeScript source files', async () => {
-    await sandbox.create();
+    await container.create();
 
     // Use the new middleware system for TypeScript support
-    sandbox.use(new TypeScriptMiddleware());
+    container.use(new TypeScriptMiddleware());
 
     // Real TypeScript test with interfaces and types that need compilation
     const tsCode = `
@@ -100,7 +100,7 @@ console.log("TypeScript compilation successful!");
 `;
 
     // Use the simplified run method - TypeScript middleware handles compilation automatically
-    const result = await sandbox.run(tsCode, 'user.ts');
+    const result = await container.run(tsCode, 'user.ts');
     expect(result).toBeDefined();
     expect(result).toContain('Hello Alice, you are 30 years old!');
     expect(result).toContain('TypeScript compilation successful!');
@@ -108,10 +108,10 @@ console.log("TypeScript compilation successful!");
 
 
   it('should support npm package installation and usage', async () => {
-    await sandbox.create();
+    await container.create();
 
     // Install a popular npm package
-    await sandbox.installPackage('lodash');
+    await container.installPackage('lodash');
 
     // Create and run code that uses the installed package (using .cjs extension)
     const testCode = `
@@ -127,7 +127,7 @@ console.log('Lodash test completed successfully');
 `;
 
     // Run the code with .cjs extension
-    const result = await sandbox.run(testCode, 'test-lodash.cjs');
+    const result = await container.run(testCode, 'test-lodash.cjs');
     expect(result).toBeDefined();
     expect(result).toMatch(
       /Doubled:\s*\[\s*(?:\x1b\[\d+m)*2(?:\x1b\[\d+m)*,\s*(?:\x1b\[\d+m)*4(?:\x1b\[\d+m)*,\s*(?:\x1b\[\d+m)*6(?:\x1b\[\d+m)*,\s*(?:\x1b\[\d+m)*8(?:\x1b\[\d+m)*,\s*(?:\x1b\[\d+m)*10(?:\x1b\[\d+m)*\s*\]/
@@ -137,7 +137,7 @@ console.log('Lodash test completed successfully');
   }, 20000);
 
   it('should handle file system operations with nested directories', async () => {
-    await sandbox.create();
+    await container.create();
 
     // Create and run file system operations directly (using relative paths and .cjs extension)
     const structureCode = `
@@ -160,20 +160,20 @@ console.log('Created', files.length, 'files/directories');
 console.log('File system operations completed successfully');
 `;
 
-    const result = await sandbox.run(structureCode, 'setup.cjs');
+    const result = await container.run(structureCode, 'setup.cjs');
     expect(result).toBeDefined();
     expect(result).toContain('File system operations completed successfully');
 
     // Verify files were created using relative paths
-    const indexContent = await sandbox.readFile('src/index.js');
+    const indexContent = await container.readFile('src/index.js');
     expect(indexContent).toContain('Main app');
 
-    const buttonContent = await sandbox.readFile('src/components/Button.js');
+    const buttonContent = await container.readFile('src/components/Button.js');
     expect(buttonContent).toContain('Button component');
   });
 
   it('should support async/await and Promise-based code', async () => {
-    await sandbox.create();
+    await container.create();
 
     const asyncCode = `
 async function fetchData() {
@@ -204,7 +204,7 @@ async function processData() {
 })();
 `;
 
-    const result = await sandbox.run(asyncCode);
+    const result = await container.run(asyncCode);
     expect(result).toBeDefined();
     expect(result).toContain('Starting async operation...');
     expect(result).toContain('Async operation completed successfully');
@@ -234,10 +234,10 @@ describe('WebContainer Integration Tests', () => {
 
   it('should handle WebContainer CDN loading', async () => {
     // Test that we can attempt to load WebContainer from CDN
-    const sandbox = new NodeSandbox();
+    const container = new NodeContainer();
 
     try {
-      await sandbox.create();
+      await container.create();
       console.log('✅ WebContainer loaded successfully from CDN');
     } catch (error: any) {
       // Expected in most test environments

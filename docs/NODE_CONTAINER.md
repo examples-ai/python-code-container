@@ -1,12 +1,12 @@
-# Node.js Sandbox with WebContainer
+# Node.js Container with WebContainer
 
-This document describes the Node.js sandbox implementation using WebContainer for in-browser Node.js execution.
+This document describes the Node.js container implementation using WebContainer for in-browser Node.js execution.
 
 ## Features
 
-### 🟢 NodeSandbox Class
+### 🟢 NodeContainer Class
 - **WebContainer Integration**: Uses StackBlitz WebContainer for running Node.js code in the browser
-- **Singleton Pattern**: Shared WebContainer instance across multiple sandbox instances
+- **Singleton Pattern**: Shared WebContainer instance across multiple container instances
 - **Full Node.js Runtime**: Complete Node.js environment with npm package support
 - **File System**: Virtual file system operations (read, write, mkdir, etc.)
 - **Package Management**: Install and use npm packages
@@ -17,12 +17,12 @@ This document describes the Node.js sandbox implementation using WebContainer fo
 ### 🔧 Key Components
 
 #### 1. Singleton Pattern
-- **Global Instance Management**: Ensures single WebContainer instance across all NodeSandbox instances
-- **Reference Counting**: Tracks active sandbox instances
+- **Global Instance Management**: Ensures single WebContainer instance across all NodeContainer instances
+- **Reference Counting**: Tracks active container instances
 - **Boot Management**: Handles WebContainer initialization and lifecycle
 - **Browser Detection**: Ensures browser-only execution
 
-#### 2. NodeSandbox
+#### 2. NodeContainer
 - **Code Execution**: Run Node.js scripts and modules
 - **File Operations**: Full file system API support
 - **Package Installation**: Install npm packages on demand
@@ -35,12 +35,12 @@ This document describes the Node.js sandbox implementation using WebContainer fo
 ### Basic Node.js Execution
 
 ```typescript
-import { NodeSandbox } from 'code-container';
+import { NodeContainer } from 'code-container';
 
-const sandbox = new NodeSandbox();
-await sandbox.create();
+const container = new NodeContainer();
+await container.create();
 
-const result = await sandbox.run(`
+const result = await container.run(`
 console.log("Hello from Node.js!");
 const sum = 2 + 3;
 console.log(\`2 + 3 = \${sum}\`);
@@ -48,35 +48,35 @@ return sum * 2;
 `);
 
 console.log('Result:', result); // 10
-await sandbox.destroy();
+await container.destroy();
 ```
 
 ### File System Operations
 
 ```typescript
-const sandbox = new NodeSandbox();
-await sandbox.create();
+const container = new NodeContainer();
+await container.create();
 
 // Write files
-await sandbox.writeFile('package.json', JSON.stringify({
+await container.writeFile('package.json', JSON.stringify({
   name: "my-project",
   version: "1.0.0",
   main: "index.js"
 }, null, 2));
 
-await sandbox.writeFile('index.js', `
+await container.writeFile('index.js', `
 const fs = require('fs');
 console.log('Hello from index.js!');
 console.log('Package.json:', JSON.parse(fs.readFileSync('package.json', 'utf8')));
 `);
 
 // Read files
-const packageJson = await sandbox.readFile('package.json');
+const packageJson = await container.readFile('package.json');
 console.log('Package.json:', packageJson);
 
 
 // Run the script
-const result = await sandbox.run('node index.js');
+const result = await container.run('node index.js');
 console.log('Output:', result);
 ```
 
@@ -84,14 +84,14 @@ console.log('Output:', result);
 ### Package Installation
 
 ```typescript
-const sandbox = new NodeSandbox();
-await sandbox.create();
+const container = new NodeContainer();
+await container.create();
 
 // Install packages
-await sandbox.installPackage('lodash');
+await container.installPackage('lodash');
 
 // Use packages in Node.js code
-const result = await sandbox.run(`
+const result = await container.run(`
 const _ = require('lodash');
 const data = [1, 2, 3, 4, 5];
 const doubled = _.map(data, x => x * 2);
@@ -108,11 +108,11 @@ console.log('Result:', result);
 ### Error Handling
 
 ```typescript
-const sandbox = new NodeSandbox();
-await sandbox.create();
+const container = new NodeContainer();
+await container.create();
 
 try {
-  await sandbox.run(`
+  await container.run(`
     const fs = require('fs');
     // This will throw an error
     fs.readFileSync('non-existent-file.txt');
@@ -121,13 +121,13 @@ try {
   console.error('Node.js error:', error.message);
   
   // Get detailed error info
-  const lastError = sandbox.getLastError();
+  const lastError = container.getLastError();
   console.error('Last error:', lastError?.message);
 }
 
 try {
   // This will fail - package doesn't exist
-  await sandbox.installPackage('this-package-definitely-does-not-exist');
+  await container.installPackage('this-package-definitely-does-not-exist');
 } catch (error) {
   console.error('Package installation error:', error.message);
 }
@@ -136,7 +136,7 @@ try {
 ## Configuration Options
 
 ```typescript
-interface NodeSandboxOptions {
+interface NodeContainerOptions {
   packageJson?: Record<string, any>;  // Custom package.json content
   files?: Record<string, string>;     // Initial files to create
 }
@@ -144,22 +144,22 @@ interface NodeSandboxOptions {
 
 ## Singleton Behavior
 
-Multiple NodeSandbox instances share the same underlying WebContainer runtime:
+Multiple NodeContainer instances share the same underlying WebContainer runtime:
 
 ```typescript
-const sandbox1 = new NodeSandbox();
-const sandbox2 = new NodeSandbox();
-const sandbox3 = new NodeSandbox();
+const container1 = new NodeContainer();
+const container2 = new NodeContainer();
+const container3 = new NodeContainer();
 
-await sandbox1.create(); // Boots WebContainer
-await sandbox2.create(); // Reuses existing WebContainer
-await sandbox3.create(); // Reuses existing WebContainer
+await container1.create(); // Boots WebContainer
+await container2.create(); // Reuses existing WebContainer
+await container3.create(); // Reuses existing WebContainer
 
 // Multiple instances share the same WebContainer
 
-await sandbox1.destroy(); // Decrements count
-await sandbox2.destroy(); // Decrements count  
-await sandbox3.destroy(); // WebContainer kept alive for reuse
+await container1.destroy(); // Decrements count
+await container2.destroy(); // Decrements count  
+await container3.destroy(); // WebContainer kept alive for reuse
 ```
 
 ## Available Node.js Ecosystem
@@ -221,7 +221,7 @@ The browser test covers:
 
 ## Security
 
-- **Sandboxed**: Node.js code runs in isolated browser environment
+- **Isolated**: Node.js code runs in isolated browser environment
 - **No File System Access**: Cannot access local file system
 - **Network Isolation**: Limited network access, same-origin policy applies
 - **Memory Isolation**: Isolated memory space from main browser thread
@@ -232,7 +232,7 @@ The browser test covers:
 ### Custom Configuration
 
 ```typescript
-const sandbox = new NodeSandbox({
+const container = new NodeContainer({
   packageJson: {
     name: 'my-app',
     version: '1.0.0',
@@ -250,16 +250,16 @@ const sandbox = new NodeSandbox({
 ### Error Handling and Debugging
 
 ```typescript
-const sandbox = new NodeSandbox();
-await sandbox.create();
+const container = new NodeContainer();
+await container.create();
 
 try {
-  const result = await sandbox.run('throw new Error("Test error");');
+  const result = await container.run('throw new Error("Test error");');
 } catch (error) {
   console.error('Execution error:', error.message);
   
   // Get last error details
-  const lastError = sandbox.getLastError();
+  const lastError = container.getLastError();
   console.error('Last error:', lastError?.message);
 }
 ```

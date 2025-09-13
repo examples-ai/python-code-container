@@ -1,16 +1,16 @@
 import { WebContainer } from '@webcontainer/api';
-import { Sandbox, Environment, ExecutionContext } from './utils/index.js';
+import { Container, Environment, ExecutionContext } from './utils/index.js';
 
-export interface NodeSandboxOptions {
+export interface NodeContainerOptions {
   packageJson?: Record<string, any>;
   files?: Record<string, string>;
 }
 
-type NodeSandboxDefaults = Required<NodeSandboxOptions>;
+type NodeContainerDefaults = Required<NodeContainerOptions>;
 
-export class NodeSandbox extends Sandbox<NodeSandboxOptions, WebContainer> {
-  constructor(options: NodeSandboxOptions = {}) {
-    const defaults: NodeSandboxDefaults = {
+export class NodeContainer extends Container<NodeContainerOptions, WebContainer> {
+  constructor(options: NodeContainerOptions = {}) {
+    const defaults: NodeContainerDefaults = {
       packageJson: {},
       files: {},
     };
@@ -37,7 +37,7 @@ export class NodeSandbox extends Sandbox<NodeSandboxOptions, WebContainer> {
         file: {
           contents: JSON.stringify(
             {
-              name: 'sandbox-project',
+              name: 'container-project',
               type: 'module',
               dependencies: {},
               ...this.options.packageJson,
@@ -109,4 +109,4 @@ export class NodeSandbox extends Sandbox<NodeSandboxOptions, WebContainer> {
 
 }
 
-export default NodeSandbox;
+export default NodeContainer;

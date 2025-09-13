@@ -1,6 +1,6 @@
-// Core sandboxes
-export { NodeSandbox } from './node-sandbox.js';
-export { PythonSandbox } from './python-sandbox.js';
+// Core containers
+export { NodeContainer } from './node-container.js';
+export { PythonContainer } from './python-container.js';
 
 // Middlewares
 export { TypeScriptMiddleware } from './middlewares/index.js';
@@ -14,7 +14,7 @@ export {
 } from './extensions/index.js';
 
 // Basic types
-export type { NodeSandboxOptions } from './node-sandbox.js';
-export type { PythonSandboxOptions } from './python-sandbox.js';
+export type { NodeContainerOptions } from './node-container.js';
+export type { PythonContainerOptions } from './python-container.js';
 export type { Middleware, ExecutionContext } from './utils/index.js';
 

@@ -1,3 +1,3 @@
 export { Environment } from './environment.js';
-export { Sandbox } from './sandbox.js';
-export type { Middleware, ExecutionContext } from './sandbox.js';
+export { Container } from './container.js';
+export type { Middleware, ExecutionContext } from './container.js';

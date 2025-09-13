@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach } from 'vitest'
-import { PythonSandbox } from '../src/index'
+import { PythonContainer } from '../src/index'
 
-// PythonSandbox browser E2E tests using Vitest browser mode with Playwright
-describe('PythonSandbox Browser Tests', () => {
-  let sandbox: PythonSandbox
+// PythonContainer browser E2E tests using Vitest browser mode with Playwright
+describe('PythonContainer Browser Tests', () => {
+  let container: PythonContainer
 
   beforeEach(() => {
-    sandbox = new PythonSandbox()
+    container = new PythonContainer()
   })
 
   it('should successfully create Pyodide in browser environment', async () => {
@@ -15,61 +15,61 @@ describe('PythonSandbox Browser Tests', () => {
     expect(typeof document).toBe('object')
     
     // In browser, Pyodide should be available
-    expect(sandbox).toBeDefined()
+    expect(container).toBeDefined()
     
-    await sandbox.create()
+    await container.create()
     
     // If we get here, Pyodide was created successfully
-    expect(sandbox.getLastError()).toBeNull()
+    expect(container.getLastError()).toBeNull()
   }, 30000) // Pyodide can take time to load
 
   it('should handle Python file operations in browser', async () => {
-    await sandbox.create()
+    await container.create()
     
     // Test basic file operations with correct method signatures
-    sandbox.writeFile('/test.py', 'print("Hello Pyodide!")')
-    const content = sandbox.readFile('/test.py', 'utf8')
+    container.writeFile('/test.py', 'print("Hello Pyodide!")')
+    const content = container.readFile('/test.py', 'utf8')
     expect(content).toBe('print("Hello Pyodide!")')
   })
 
   it('should execute Python code in Pyodide', async () => {
-    await sandbox.create()
+    await container.create()
     
     // Test simple Python execution
-    const result = await sandbox.run('2 + 3')
+    const result = await container.run('2 + 3')
     expect(result).toBe(5)
     
     // Test Python print
-    await sandbox.run('print("Hello from Pyodide!")')
+    await container.run('print("Hello from Pyodide!")')
   }, 10000)
 
   it('should install and use Python packages', async () => {
-    await sandbox.create()
+    await container.create()
     
     // Test package installation
-    await sandbox.installPackage('micropip')
+    await container.installPackage('micropip')
     
     // Test using installed package
-    await sandbox.run('import micropip')
+    await container.run('import micropip')
   }, 20000) // Package installation can take time
 
   it('should have Python-specific methods available', () => {
-    // Test that PythonSandbox has the expected API surface
-    expect(typeof sandbox.create).toBe('function')
-    expect(typeof sandbox.destroy).toBe('function')
-    expect(typeof sandbox.run).toBe('function')
-    expect(typeof sandbox.runSync).toBe('function')
-    expect(typeof sandbox.writeFile).toBe('function')
-    expect(typeof sandbox.readFile).toBe('function')
-    expect(typeof sandbox.installPackage).toBe('function')
-    expect(typeof sandbox.getLastError).toBe('function')
+    // Test that PythonContainer has the expected API surface
+    expect(typeof container.create).toBe('function')
+    expect(typeof container.destroy).toBe('function')
+    expect(typeof container.run).toBe('function')
+    expect(typeof container.runSync).toBe('function')
+    expect(typeof container.writeFile).toBe('function')
+    expect(typeof container.readFile).toBe('function')
+    expect(typeof container.installPackage).toBe('function')
+    expect(typeof container.getLastError).toBe('function')
   })
 
   it('should support synchronous Python execution', async () => {
-    await sandbox.create()
+    await container.create()
     
-    // Test synchronous execution (unique to PythonSandbox)
-    const result = sandbox.runSync('3 * 4')
+    // Test synchronous execution (unique to PythonContainer)
+    const result = container.runSync('3 * 4')
     expect(result).toBe(12)
   })
 })
@@ -88,46 +88,46 @@ describe('Pyodide Integration Tests', () => {
   })
 
   it('should handle Pyodide CDN loading and initialization', async () => {
-    const sandbox = new PythonSandbox()
+    const container = new PythonContainer()
     
     // Pyodide should load successfully in most browser environments
-    await sandbox.create()
+    await container.create()
     
     // Verify Pyodide is properly initialized
-    expect(sandbox.getLastError()).toBeNull()
+    expect(container.getLastError()).toBeNull()
     
     // Test basic Python functionality
-    const result = await sandbox.run('1 + 1')
+    const result = await container.run('1 + 1')
     expect(result).toBe(2)
     
     console.log('✅ Pyodide loaded and initialized successfully')
   }, 30000)
 
   it('should support Python standard library', async () => {
-    const sandbox = new PythonSandbox()
-    await sandbox.create()
+    const container = new PythonContainer()
+    await container.create()
     
     // Test Python standard library modules
-    await sandbox.run('import sys')
-    await sandbox.run('import os')
-    await sandbox.run('import json')
+    await container.run('import sys')
+    await container.run('import os')
+    await container.run('import json')
     
     // Test that they work
-    const pythonVersion = await sandbox.run('sys.version_info.major')
+    const pythonVersion = await container.run('sys.version_info.major')
     expect(pythonVersion).toBe(3)
     
     console.log('✅ Python standard library modules available')
   })
 
   it('should support package management with micropip', async () => {
-    const sandbox = new PythonSandbox()
-    await sandbox.create()
+    const container = new PythonContainer()
+    await container.create()
     
     // Install micropip (should be fast as it's pre-loaded)
-    await sandbox.installPackage('micropip')
+    await container.installPackage('micropip')
     
     // Use micropip to check available packages
-    await sandbox.run(`
+    await container.run(`
 import micropip
 packages = micropip.list()
 print(f"Available packages: {len(packages)}")

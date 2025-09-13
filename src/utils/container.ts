@@ -11,7 +11,7 @@ export interface ExecutionContext<TRuntime> {
   metadata: Record<string, any>;
 }
 
-export abstract class Sandbox<TOptions, TRuntime> {
+export abstract class Container<TOptions, TRuntime> {
   protected options: Required<TOptions>;
   protected runtime: TRuntime | null = null;
   protected lastError: Error | null = null;
@@ -32,8 +32,8 @@ export abstract class Sandbox<TOptions, TRuntime> {
   protected abstract destroyInstance(instance: TRuntime): Promise<void>;
   protected abstract initializeRuntime(): Promise<void>;
 
-  // Get sandbox name using constructor name
-  protected getSandboxName(): string {
+  // Get container name using constructor name
+  protected getContainerName(): string {
     return this.constructor.name;
   }
 
@@ -66,63 +66,63 @@ export abstract class Sandbox<TOptions, TRuntime> {
 
   protected async acquireRuntime(): Promise<TRuntime> {
     this.validateEnvironment();
-    const instanceKey = this.getSandboxName();
+    const instanceKey = this.getContainerName();
 
     // Increment reference count
-    const currentCount = Sandbox.referenceCounts.get(instanceKey) || 0;
-    Sandbox.referenceCounts.set(instanceKey, currentCount + 1);
+    const currentCount = Container.referenceCounts.get(instanceKey) || 0;
+    Container.referenceCounts.set(instanceKey, currentCount + 1);
 
     // Return existing instance
-    if (Sandbox.instances.has(instanceKey)) {
-      const instance = Sandbox.instances.get(instanceKey);
+    if (Container.instances.has(instanceKey)) {
+      const instance = Container.instances.get(instanceKey);
       return instance;
     }
 
     // Wait for existing load
     if (
-      Sandbox.loadingStates.get(instanceKey) &&
-      Sandbox.loadPromises.has(instanceKey)
+      Container.loadingStates.get(instanceKey) &&
+      Container.loadPromises.has(instanceKey)
     ) {
-      return await Sandbox.loadPromises.get(instanceKey);
+      return await Container.loadPromises.get(instanceKey);
     }
 
     // Start loading
-    Sandbox.loadingStates.set(instanceKey, true);
+    Container.loadingStates.set(instanceKey, true);
     const loadPromise = this.createInstance();
-    Sandbox.loadPromises.set(instanceKey, loadPromise);
+    Container.loadPromises.set(instanceKey, loadPromise);
 
     try {
       const instance = await loadPromise;
-      Sandbox.instances.set(instanceKey, instance);
-      Sandbox.loadingStates.set(instanceKey, false);
+      Container.instances.set(instanceKey, instance);
+      Container.loadingStates.set(instanceKey, false);
       return instance;
     } catch (error) {
-      Sandbox.loadingStates.set(instanceKey, false);
-      Sandbox.loadPromises.delete(instanceKey);
-      const currentCount = Sandbox.referenceCounts.get(instanceKey) || 0;
-      Sandbox.referenceCounts.set(instanceKey, Math.max(0, currentCount - 1));
+      Container.loadingStates.set(instanceKey, false);
+      Container.loadPromises.delete(instanceKey);
+      const currentCount = Container.referenceCounts.get(instanceKey) || 0;
+      Container.referenceCounts.set(instanceKey, Math.max(0, currentCount - 1));
       throw error;
     }
   }
 
   protected async releaseRuntime(): Promise<void> {
-    const instanceKey = this.getSandboxName();
-    const currentCount = Sandbox.referenceCounts.get(instanceKey) || 0;
+    const instanceKey = this.getContainerName();
+    const currentCount = Container.referenceCounts.get(instanceKey) || 0;
 
     if (currentCount <= 0) {
       return;
     }
 
     const newCount = currentCount - 1;
-    Sandbox.referenceCounts.set(instanceKey, newCount);
+    Container.referenceCounts.set(instanceKey, newCount);
 
     // Destroy when no references remain
-    if (newCount === 0 && Sandbox.instances.has(instanceKey)) {
-      const instance = Sandbox.instances.get(instanceKey);
+    if (newCount === 0 && Container.instances.has(instanceKey)) {
+      const instance = Container.instances.get(instanceKey);
       try {
         await this.destroyInstance(instance);
-        Sandbox.instances.delete(instanceKey);
-        Sandbox.loadPromises.delete(instanceKey);
+        Container.instances.delete(instanceKey);
+        Container.loadPromises.delete(instanceKey);
       } catch (error) {
         throw error;
       }
@@ -131,19 +131,19 @@ export abstract class Sandbox<TOptions, TRuntime> {
 
   // For testing - reset all static state
   protected async reset(): Promise<void> {
-    const sandboxName = this.getSandboxName();
+    const containerName = this.getContainerName();
 
-    if (Sandbox.instances.has(sandboxName)) {
-      const instance = Sandbox.instances.get(sandboxName);
+    if (Container.instances.has(containerName)) {
+      const instance = Container.instances.get(containerName);
       try {
         await this.destroyInstance(instance);
       } catch (error) {}
     }
 
-    Sandbox.instances.delete(sandboxName);
-    Sandbox.referenceCounts.set(sandboxName, 0);
-    Sandbox.loadingStates.set(sandboxName, false);
-    Sandbox.loadPromises.delete(sandboxName);
+    Container.instances.delete(containerName);
+    Container.referenceCounts.set(containerName, 0);
+    Container.loadingStates.set(containerName, false);
+    Container.loadPromises.delete(containerName);
 
     this.runtime = null;
     this.isCreated = false;
@@ -153,7 +153,7 @@ export abstract class Sandbox<TOptions, TRuntime> {
   async create(): Promise<void> {
     try {
       if (this.isDestroyed) {
-        throw new Error(`${this.getSandboxName()} has been destroyed`);
+        throw new Error(`${this.getContainerName()} has been destroyed`);
       }
 
       if (this.isCreated) {
@@ -190,11 +190,11 @@ export abstract class Sandbox<TOptions, TRuntime> {
   protected getRuntime(): TRuntime {
     if (!this.runtime) {
       throw new Error(
-        `${this.getSandboxName()} not created. Call create() first.`
+        `${this.getContainerName()} not created. Call create() first.`
       );
     }
     if (this.isDestroyed) {
-      throw new Error(`${this.getSandboxName()} has been destroyed`);
+      throw new Error(`${this.getContainerName()} has been destroyed`);
     }
     return this.runtime;
   }

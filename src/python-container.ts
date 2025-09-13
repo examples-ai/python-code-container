@@ -1,4 +1,4 @@
-import { Sandbox, Environment, ExecutionContext } from './utils/index.js';
+import { Container, Environment, ExecutionContext } from './utils/index.js';
 
 // Type definitions for Pyodide
 export interface PyodideInterface {
@@ -44,21 +44,21 @@ declare global {
   }
 }
 
-export interface PythonSandboxOptions {
+export interface PythonContainerOptions {
   pyodidePath?: string;
   packages?: string[];
   homedir?: string;
   enablePackageAutoInstall?: boolean;
 }
 
-type PythonSandboxDefaults = Required<PythonSandboxOptions>;
+type PythonContainerDefaults = Required<PythonContainerOptions>;
 
-export class PythonSandbox extends Sandbox<
-  PythonSandboxOptions,
+export class PythonContainer extends Container<
+  PythonContainerOptions,
   PyodideInterface
 > {
-  constructor(options: PythonSandboxOptions = {}) {
-    const defaults: PythonSandboxDefaults = {
+  constructor(options: PythonContainerOptions = {}) {
+    const defaults: PythonContainerDefaults = {
       pyodidePath: 'https://cdn.jsdelivr.net/pyodide/v0.24.1/full/',
       packages: [],
       homedir: '',
@@ -182,4 +182,4 @@ os.chdir('${this.options.homedir}')
   }
 }
 
-export default PythonSandbox;
+export default PythonContainer;
