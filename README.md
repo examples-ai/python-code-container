@@ -1,9 +1,13 @@
-# Code Container
+# Code Container Monorepo
 
-A TypeScript library for running Node.js and Python code in isolated browser environments.
+A monorepo containing packages for browser-based code execution environments with TypeScript, Python, and Node.js support, plus React bindings with performance optimizations.
 
-## Features
+## Packages
 
+### [@code-container/core](./packages/code-container)
+Core container functionality for running Node.js and Python code in isolated browser environments.
+
+**Features:**
 - 🌐 **Browser-based**: Run Node.js and Python code directly in the browser
 - 🏗️ **WebContainer Integration**: Full Node.js runtime powered by StackBlitz WebContainer
 - 🐍 **Pyodide Integration**: Complete Python environment with scientific packages
@@ -13,211 +17,130 @@ A TypeScript library for running Node.js and Python code in isolated browser env
 - 🔄 **Singleton Pattern**: Efficient resource sharing across instances
 - 🎯 **TypeScript**: Full TypeScript support with type definitions
 
-## Installation
+### [@code-container/react](./packages/react-code-container)
+React bindings with performance-optimized provider and hooks.
 
-```bash
-npm install code-container
-# or
-pnpm add code-container
-```
+**Features:**
+- ⚛️ **React Integration**: Hooks and providers for React applications
+- 🚀 **Performance Optimized**: Lazy loading, preloading, and intelligent caching
+- 🎯 **Type-Safe**: Full TypeScript support with smart type inference
+- 📊 **Monitoring**: Built-in performance metrics and debugging tools
+- 🔄 **Lifecycle Management**: Automatic container creation and cleanup
+- ⚡ **Concurrent Loading**: Manages multiple container initializations
+- 🛡️ **Error Handling**: Comprehensive error boundaries and retry mechanisms
 
 ## Quick Start
 
-### Node.js Container
+### Using Core Package
 
 ```typescript
-import { NodeContainer } from 'code-container';
+import { NodeContainer, PythonContainer } from '@code-container/core';
 
-const container = new NodeContainer();
-await container.create();
+// Node.js container
+const nodeContainer = new NodeContainer();
+await nodeContainer.create();
+const result = await nodeContainer.run('console.log("Hello World!"); return 42;');
 
-// Run Node.js code
-const result = await container.run(`
-console.log("Hello from Node.js!");
-const sum = 2 + 3;
-return sum * 2;
-`);
-
-console.log('Result:', result); // 10
-
-// Install and use packages
-await container.installPackage('lodash');
-const lodashResult = await container.run(`
-const _ = require('lodash');
-return _.chunk([1, 2, 3, 4, 5, 6], 2);
-`);
-
-console.log('Lodash result:', lodashResult); // [[1, 2], [3, 4], [5, 6]]
-
-await container.destroy();
+// Python container
+const pythonContainer = new PythonContainer();
+await pythonContainer.create();
+const pyResult = await pythonContainer.run('print("Hello from Python!"); 2 + 3');
 ```
 
-### Python Container
+### Using React Package
 
 ```typescript
-import { PythonContainer } from 'code-container';
+import { CodeContainerProvider, useContainer } from '@code-container/react';
 
-const container = new PythonContainer();
-await container.create();
-
-// Run Python code
-const result = await container.run(`
-print("Hello from Python!")
-import math
-result = math.sqrt(16) + math.pi
-print(f"Result: {result}")
-result
-`);
-
-console.log('Result:', result); // ~7.14
-
-// Install and use packages
-await container.installPackage('numpy');
-const numpyResult = await container.run(`
-import numpy as np
-arr = np.array([1, 2, 3, 4, 5])
-np.mean(arr)
-`);
-
-console.log('NumPy mean:', numpyResult); // 3
-
-await container.destroy();
-```
-
-## API Reference
-
-### NodeContainer
-
-```typescript
-class NodeContainer {
-  constructor(options?: NodeContainerOptions)
-  
-  // Lifecycle
-  async create(): Promise<void>
-  async destroy(): Promise<void>
-  
-  // Code execution
-  async run(code: string, filename?: string): Promise<any>
-  
-  // Package management
-  async installPackage(packageName: string): Promise<void>
-  
-  // File operations
-  async readFile(path: string): Promise<string>
-  async writeFile(path: string, content: string | Uint8Array): Promise<void>
-  
-  // Utilities
-  getLastError(): Error | null
-  getRuntime(): WebContainer // Access underlying WebContainer
+function App() {
+  return (
+    <CodeContainerProvider
+      containers={['node', 'python']}
+      preload={['node']}  // Preload Node.js container
+      lazy={true}         // Enable lazy loading
+    >
+      <CodeRunner />
+    </CodeContainerProvider>
+  );
 }
 
-interface NodeContainerOptions {
-  packageJson?: Record<string, any>  // Custom package.json content
-  files?: Record<string, string>     // Initial files to create
+function CodeRunner() {
+  const { container, isLoading, isReady, error } = useContainer({ type: 'node' });
+
+  if (isLoading) return <div>Loading container...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  if (!isReady) return <div>Container not ready</div>;
+
+  return <div>Container ready! {container && 'Available'}</div>;
 }
 ```
 
-### PythonContainer
+## Development
 
-```typescript
-class PythonContainer {
-  constructor(options?: PythonContainerOptions)
-  
-  // Lifecycle
-  async create(): Promise<void>
-  async destroy(): Promise<void>
-  
-  // Code execution
-  async run(code: string, filename?: string): Promise<any>
-  runSync(code: string): any // Synchronous execution
-  
-  // Package management
-  async installPackage(packageName: string): Promise<void>
-  
-  // File operations
-  readFile(path: string, encoding?: string): string | Uint8Array
-  writeFile(path: string, content: string | Uint8Array): void
-  
-  // JavaScript interop
-  registerJsModule(name: string, module: any): void
-  unregisterJsModule(name: string): void
-  
-  // Utilities
-  getLastError(): Error | null
-  getRuntime(): PyodideInterface // Access underlying Pyodide
-}
-
-interface PythonContainerOptions {
-  pyodidePath?: string                // Custom Pyodide CDN URL
-  packages?: string[]                 // Packages to pre-install
-  homedir?: string                    // Working directory
-  enablePackageAutoInstall?: boolean // Auto-install from imports (default: true)
-}
+### Setup
+```bash
+pnpm install
 ```
 
-## Extensions
+### Build
+```bash
+# Build all packages
+pnpm build
 
-The library includes several extensions for advanced functionality:
-
-```typescript
-import { 
-  NodeProcessExtension,
-  PythonFileSystemExtension, 
-  PythonGlobalsExtension,
-  PythonInteropExtension 
-} from 'code-container';
-
-// Node.js process management
-const nodeExt = new NodeProcessExtension(container.getRuntime());
-await nodeExt.runScript('build');
-
-// Python file system operations
-const fsExt = new PythonFileSystemExtension(container.getRuntime());
-await fsExt.createProject('/workspace', 'my-project');
-
-// Python global variable management
-const globalsExt = new PythonGlobalsExtension(container.getRuntime());
-globalsExt.setGlobal('my_var', 42);
-
-// Python-JavaScript interoperability
-const interopExt = new PythonInteropExtension(container.getRuntime());
-interopExt.exposeFunction('jsAlert', alert);
+# Build specific package
+pnpm build:core
+pnpm build:react
 ```
+
+### Test
+```bash
+# Test all packages
+pnpm test
+
+# Test specific package
+pnpm test:core
+pnpm test:react
+```
+
+## Package Scripts
+
+- `pnpm build` - Build all packages
+- `pnpm test` - Run tests for all packages
+- `pnpm clean` - Clean all build artifacts
+- `pnpm dev` - Start development mode (watch builds)
+
+## Architecture
+
+The monorepo uses PNPM workspaces for efficient dependency management:
+
+- **@code-container/core**: Core container functionality
+- **@code-container/react**: React bindings that depend on core package
+- Shared TypeScript configuration
+- Independent versioning for each package
+- Cross-package dependency management
+
+## Performance Features (React Package)
+
+### Lazy Loading
+Containers are only initialized when first requested, reducing initial load time.
+
+### Preloading
+Specify containers to preload immediately for faster subsequent access.
+
+### Intelligent Caching
+Container instances are shared across components and reused efficiently.
+
+### Concurrent Management
+Multiple containers can be initialized concurrently with configurable limits.
+
+### Performance Monitoring
+Built-in metrics for initialization times, memory usage, and usage patterns.
 
 ## Browser Requirements
 
 - **Node.js Container**: Requires modern browsers with SharedArrayBuffer support
 - **Python Container**: Works in all modern browsers
 - **HTTPS**: Required for WebContainer in production environments
-
-## Testing
-
-Run the Node.js tests:
-```bash
-pnpm test
-```
-
-Test full browser functionality:
-```bash
-pnpm run build
-# Then open tests/browser-test.html and tests/python-test.html in your browser
-```
-
-## Architecture
-
-Both containers use a singleton pattern to efficiently share resources:
-
-- **Single Runtime**: Multiple container instances share one WebContainer/Pyodide runtime
-- **Reference Counting**: Automatic cleanup when no instances remain
-- **Resource Sharing**: Files and packages are shared across instances
-- **Isolation**: Each container maintains separate error state and configuration
-
-## Examples
-
-See the `/tests` directory for comprehensive examples:
-- `tests/browser-test.html` - Node.js WebContainer examples
-- `tests/python-test.html` - Python Pyodide examples
-- `tests/extensions-test.js` - Extension usage examples
 
 ## License
 

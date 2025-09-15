@@ -1,4 +1,3 @@
-import { Environment } from './index.js';
 
 export interface Middleware<TRuntime> {
   process(context: ExecutionContext<TRuntime>): Promise<ExecutionContext<TRuntime>>;

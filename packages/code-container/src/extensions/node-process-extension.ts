@@ -1,5 +1,3 @@
-import { WebContainer } from '@webcontainer/api';
-
 export interface ProcessResult {
   stdout: string;
   exitCode: number;

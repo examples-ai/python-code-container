@@ -101,7 +101,7 @@ export class PythonContainer extends Container<
       script.onload = () => {
         resolve();
       };
-      script.onerror = (error: any) => {
+      script.onerror = () => {
         const err = new Error(
           `Failed to load Pyodide from ${pyodidePath}pyodide.js`
         );

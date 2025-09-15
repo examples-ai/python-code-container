@@ -1,0 +1,57 @@
+{
+  "name": "@code-container/core",
+  "version": "1.0.0",
+  "description": "A browser-based code execution environment with TypeScript, Python, and Node.js support",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "browser": "./dist/index.js",
+      "node": "./dist/index.js",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:browser": "vitest run --config vitest.browser.config.ts",
+    "test:browser:watch": "vitest --config vitest.browser.config.ts",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "code-container",
+    "container",
+    "webcontainer",
+    "pyodide",
+    "python",
+    "javascript",
+    "typescript",
+    "browser",
+    "execution",
+    "middleware"
+  ],
+  "author": "Jimmy Moon <ragingwind@gmail.com>",
+  "license": "MIT",
+  "packageManager": "pnpm@10.15.0",
+  "devDependencies": {
+    "@types/node": "^24.3.1",
+    "@vitest/browser": "^3.2.4",
+    "playwright": "^1.55.0",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.5",
+    "vite-plugin-dts": "^4.5.4",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@webcontainer/api": "^1.6.1"
+  }
+}
