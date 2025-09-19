@@ -1,5 +1,5 @@
 {
-  "name": "code-container",
+  "name": "@examples-ai/code-container",
   "version": "1.0.0",
   "description": "A browser-based code execution environment with TypeScript, Python, Node.js support and React bindings",
   "type": "module",
