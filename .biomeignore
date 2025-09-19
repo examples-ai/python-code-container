@@ -1,0 +1,6 @@
+dist/**
+node_modules/**
+examples/**/node_modules/**
+examples/**/dist/**
+tests/browser-test.html
+tests/python-test.html

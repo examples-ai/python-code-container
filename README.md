@@ -1,6 +1,6 @@
 # Code Container Monorepo
 
-A monorepo containing packages for browser-based code execution environments with TypeScript, Python, and Node.js support, plus React bindings with performance optimizations.
+A monorepo containing packages for browser-based code execution environments with TypeScript, Python, and Node.js support, plus simple React bindings.
 
 ## Packages
 
@@ -18,16 +18,13 @@ Core container functionality for running Node.js and Python code in isolated bro
 - 🎯 **TypeScript**: Full TypeScript support with type definitions
 
 ### [@code-container/react](./packages/react-code-container)
-React bindings with performance-optimized provider and hooks.
+Simple React bindings with provider and hooks.
 
 **Features:**
 - ⚛️ **React Integration**: Hooks and providers for React applications
-- 🚀 **Performance Optimized**: Lazy loading, preloading, and intelligent caching
 - 🎯 **Type-Safe**: Full TypeScript support with smart type inference
-- 📊 **Monitoring**: Built-in performance metrics and debugging tools
-- 🔄 **Lifecycle Management**: Automatic container creation and cleanup
-- ⚡ **Concurrent Loading**: Manages multiple container initializations
-- 🛡️ **Error Handling**: Comprehensive error boundaries and retry mechanisms
+- 🔄 **Lifecycle Management**: Simple container creation and management
+- 🛡️ **Error Handling**: Basic error handling and retry mechanisms
 
 ## Quick Start
 
@@ -54,24 +51,33 @@ import { CodeContainerProvider, useContainer } from '@code-container/react';
 
 function App() {
   return (
-    <CodeContainerProvider
-      containers={['node', 'python']}
-      preload={['node']}  // Preload Node.js container
-      lazy={true}         // Enable lazy loading
-    >
+    <CodeContainerProvider containers={['node', 'python']}>
       <CodeRunner />
     </CodeContainerProvider>
   );
 }
 
 function CodeRunner() {
-  const { container, isLoading, isReady, error } = useContainer({ type: 'node' });
+  const { container, isLoading, isReady, error, execute } = useContainer({ type: 'node' });
 
-  if (isLoading) return <div>Loading container...</div>;
+  const runCode = async () => {
+    try {
+      const result = await execute('console.log("Hello from Node.js!"); return 42;');
+      console.log(result);
+    } catch (err) {
+      console.error('Execution failed:', err);
+    }
+  };
+
   if (error) return <div>Error: {error.message}</div>;
-  if (!isReady) return <div>Container not ready</div>;
 
-  return <div>Container ready! {container && 'Available'}</div>;
+  return (
+    <div>
+      <button onClick={runCode} disabled={isLoading}>
+        {isLoading ? 'Loading...' : 'Run Code'}
+      </button>
+    </div>
+  );
 }
 ```
 
@@ -119,22 +125,16 @@ The monorepo uses PNPM workspaces for efficient dependency management:
 - Independent versioning for each package
 - Cross-package dependency management
 
-## Performance Features (React Package)
+## Features (React Package)
 
-### Lazy Loading
-Containers are only initialized when first requested, reducing initial load time.
+### Simple Container Management
+Containers are initialized on-demand when accessed through hooks.
 
-### Preloading
-Specify containers to preload immediately for faster subsequent access.
-
-### Intelligent Caching
+### Shared Instances
 Container instances are shared across components and reused efficiently.
 
-### Concurrent Management
-Multiple containers can be initialized concurrently with configurable limits.
-
-### Performance Monitoring
-Built-in metrics for initialization times, memory usage, and usage patterns.
+### Error Handling
+Basic error handling with retry capabilities for failed container operations.
 
 ## Browser Requirements
 

@@ -1,21 +1,35 @@
 {
-  "name": "code-container-monorepo",
+  "name": "code-container",
   "version": "1.0.0",
-  "description": "Monorepo for code-container packages",
-  "private": true,
+  "description": "A browser-based code execution environment with TypeScript, Python, Node.js support and React bindings",
   "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "browser": "./dist/index.js",
+      "node": "./dist/index.js",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "build": "pnpm -r run build",
-    "dev": "pnpm -r run dev",
-    "test": "pnpm -r run test",
-    "test:browser": "pnpm -r run test:browser",
-    "clean": "pnpm -r run clean",
-    "typecheck": "pnpm -r run typecheck",
-    "build:core": "pnpm --filter @code-container/core run build",
-    "build:react": "pnpm --filter @code-container/react run build",
-    "test:core": "pnpm --filter @code-container/core run test",
-    "test:react": "pnpm --filter @code-container/react run test",
-    "dev:examples": "pnpm --filter react-code-container-demo run dev"
+    "build": "vite build",
+    "dev": "vite build --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:browser": "vitest run --config vitest.browser.config.ts",
+    "test:browser:watch": "vitest --config vitest.browser.config.ts",
+    "lint": "biome check src",
+    "lint:fix": "biome check --write src",
+    "format": "biome format --write src",
+    "format:check": "biome format src",
+    "clean": "rm -rf dist"
   },
   "keywords": [
     "code-container",
@@ -27,12 +41,37 @@
     "typescript",
     "browser",
     "execution",
-    "middleware"
+    "react",
+    "hooks"
   ],
   "author": "Jimmy Moon <ragingwind@gmail.com>",
   "license": "MIT",
   "packageManager": "pnpm@10.15.0",
+  "peerDependencies": {
+    "react": ">=16.8.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
   "devDependencies": {
-    "typescript": "^5.9.2"
+    "@biomejs/biome": "^2.2.4",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@types/node": "^24.3.1",
+    "@types/react": "^19.0.1",
+    "@vitest/browser": "^3.2.4",
+    "jsdom": "^26.0.0",
+    "playwright": "^1.55.0",
+    "react": "^19.0.0",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.5",
+    "vite-plugin-dts": "^4.5.4",
+    "vitest": "^3.2.4"
+  },
+  "dependencies": {
+    "@webcontainer/api": "^1.6.1",
+    "swr": "^2.3.6"
   }
 }
