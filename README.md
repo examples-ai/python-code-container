@@ -1,11 +1,6 @@
-# Code Container Monorepo
+# Code Container
 
-A monorepo containing packages for browser-based code execution environments with TypeScript, Python, and Node.js support, plus simple React bindings.
-
-## Packages
-
-### [@code-container/core](./packages/code-container)
-Core container functionality for running Node.js and Python code in isolated browser environments.
+Browser-based code execution environments for Node.js and Python with TypeScript support and React bindings.
 
 **Features:**
 - 🌐 **Browser-based**: Run Node.js and Python code directly in the browser
@@ -16,53 +11,60 @@ Core container functionality for running Node.js and Python code in isolated bro
 - 📁 **File System**: Virtual file system operations
 - 🔄 **Singleton Pattern**: Efficient resource sharing across instances
 - 🎯 **TypeScript**: Full TypeScript support with type definitions
-
-### [@code-container/react](./packages/react-code-container)
-Simple React bindings with provider and hooks.
-
-**Features:**
 - ⚛️ **React Integration**: Hooks and providers for React applications
-- 🎯 **Type-Safe**: Full TypeScript support with smart type inference
-- 🔄 **Lifecycle Management**: Simple container creation and management
-- 🛡️ **Error Handling**: Basic error handling and retry mechanisms
+- 🛡️ **Error Handling**: Comprehensive error handling and retry mechanisms
+
+## Installation
+
+```bash
+npm install code-container
+# or
+yarn add code-container
+# or
+pnpm add code-container
+```
 
 ## Quick Start
 
-### Using Core Package
+### Core API
 
 ```typescript
-import { NodeContainer, PythonContainer } from '@code-container/core';
+import { NodeContainer, PythonContainer, bootWebContainer, bootPyodide } from 'code-container';
 
 // Node.js container
-const nodeContainer = new NodeContainer();
-await nodeContainer.create();
+const nodeContainer = await bootWebContainer();
 const result = await nodeContainer.run('console.log("Hello World!"); return 42;');
 
 // Python container
-const pythonContainer = new PythonContainer();
-await pythonContainer.create();
+const pythonContainer = await bootPyodide();
 const pyResult = await pythonContainer.run('print("Hello from Python!"); 2 + 3');
 ```
 
-### Using React Package
+### React Hooks
 
 ```typescript
-import { CodeContainerProvider, useContainer } from '@code-container/react';
+import { NodeContainerProvider, PythonContainerProvider, useNodeContainer, usePythonContainer } from 'code-container';
 
 function App() {
   return (
-    <CodeContainerProvider containers={['node', 'python']}>
-      <CodeRunner />
-    </CodeContainerProvider>
+    <NodeContainerProvider>
+      <PythonContainerProvider>
+        <NodeCodeRunner />
+        <PythonCodeRunner />
+      </PythonContainerProvider>
+    </NodeContainerProvider>
   );
 }
 
-function CodeRunner() {
-  const { container, isLoading, isReady, error, execute } = useContainer({ type: 'node' });
+function NodeCodeRunner() {
+  const { webContainer, isLoading, error } = useNodeContainer();
+  const isReady = webContainer && !isLoading && !error;
 
   const runCode = async () => {
+    if (!isReady) return;
+
     try {
-      const result = await execute('console.log("Hello from Node.js!"); return 42;');
+      const result = await webContainer.run('console.log("Hello from Node.js!"); return 42;');
       console.log(result);
     } catch (err) {
       console.error('Execution failed:', err);
@@ -73,13 +75,107 @@ function CodeRunner() {
 
   return (
     <div>
-      <button onClick={runCode} disabled={isLoading}>
-        {isLoading ? 'Loading...' : 'Run Code'}
+      <button onClick={runCode} disabled={!isReady}>
+        {isLoading ? 'Loading...' : 'Run Node.js Code'}
+      </button>
+    </div>
+  );
+}
+
+function PythonCodeRunner() {
+  const { pyodide, isLoading, error } = usePythonContainer();
+  const isReady = pyodide && !isLoading && !error;
+
+  const runCode = async () => {
+    if (!isReady) return;
+
+    try {
+      const result = await pyodide.run('print("Hello from Python!"); 2 + 3');
+      console.log(result);
+    } catch (err) {
+      console.error('Execution failed:', err);
+    }
+  };
+
+  if (error) return <div>Error: {error.message}</div>;
+
+  return (
+    <div>
+      <button onClick={runCode} disabled={!isReady}>
+        {isLoading ? 'Loading...' : 'Run Python Code'}
       </button>
     </div>
   );
 }
 ```
+
+## API Reference
+
+### Core Functions
+
+#### `bootWebContainer(): Promise<NodeContainer>`
+Initializes a Node.js container with WebContainer runtime.
+
+#### `bootPyodide(): Promise<PythonContainer>`
+Initializes a Python container with Pyodide runtime.
+
+#### `resetNodeRuntime(): void`
+Resets the Node.js runtime singleton.
+
+#### `resetPythonRuntime(): void`
+Resets the Python runtime singleton.
+
+### Container Classes
+
+#### `NodeContainer`
+- `run(code: string, options?: RunOptions): Promise<string>` - Execute Node.js code
+- File system operations: `readFile()`, `writeFile()`, etc.
+- Package management: Install npm packages
+
+#### `PythonContainer`
+- `run(code: string, options?: RunOptions): Promise<string>` - Execute Python code
+- `installPackage(packageName: string): Promise<void>` - Install Python packages
+- File system operations for Python environment
+
+### React Hooks
+
+#### `useNodeContainer(): NodeContainerHookResult`
+Returns:
+- `webContainer: NodeContainer | null` - The Node.js container instance
+- `isLoading: boolean` - Loading state
+- `error: Error | null` - Error state
+
+#### `usePythonContainer(): PythonContainerHookResult`
+Returns:
+- `pyodide: PythonContainer | null` - The Python container instance
+- `isLoading: boolean` - Loading state
+- `error: Error | null` - Error state
+
+### React Providers
+
+#### `NodeContainerProvider`
+Provides Node.js container context to child components. Automatically handles WebContainer initialization.
+
+#### `PythonContainerProvider`
+Provides Python container context to child components. Automatically loads Pyodide and handles initialization.
+
+Props:
+- `src?: string` - Custom Pyodide CDN URL (default: jsdelivr v0.25.1)
+- `strategy?: 'beforeInteractive' | 'afterInteractive' | 'lazyOnload'` - Loading strategy
+
+## Features
+
+### Automatic Initialization
+Containers are initialized automatically when providers mount, with singleton pattern ensuring efficient resource usage.
+
+### Output Capture
+Python containers automatically capture `print()` output and return it as execution results.
+
+### Error Handling
+Comprehensive error handling with proper error states exposed through hooks.
+
+### TypeScript Support
+Full TypeScript definitions with proper typing for all APIs and hooks.
 
 ## Development
 
@@ -90,51 +186,19 @@ pnpm install
 
 ### Build
 ```bash
-# Build all packages
 pnpm build
-
-# Build specific package
-pnpm build:core
-pnpm build:react
 ```
 
 ### Test
 ```bash
-# Test all packages
 pnpm test
-
-# Test specific package
-pnpm test:core
-pnpm test:react
 ```
 
-## Package Scripts
-
-- `pnpm build` - Build all packages
-- `pnpm test` - Run tests for all packages
-- `pnpm clean` - Clean all build artifacts
-- `pnpm dev` - Start development mode (watch builds)
-
-## Architecture
-
-The monorepo uses PNPM workspaces for efficient dependency management:
-
-- **@code-container/core**: Core container functionality
-- **@code-container/react**: React bindings that depend on core package
-- Shared TypeScript configuration
-- Independent versioning for each package
-- Cross-package dependency management
-
-## Features (React Package)
-
-### Simple Container Management
-Containers are initialized on-demand when accessed through hooks.
-
-### Shared Instances
-Container instances are shared across components and reused efficiently.
-
-### Error Handling
-Basic error handling with retry capabilities for failed container operations.
+### Run Example
+```bash
+cd examples/react-demo
+pnpm dev
+```
 
 ## Browser Requirements
 
