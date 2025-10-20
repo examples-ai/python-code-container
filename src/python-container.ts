@@ -1,28 +1,16 @@
-import { Environment } from './environment.js';
 import type { PyodideInterface } from './types.js';
-
-// Runtime management - singleton pattern for bootstrap
-const runtime = globalThis as any;
+import { runtime } from './utils.js';
 
 export async function bootPyodide(): Promise<PythonContainer> {
-  if (runtime.__CODE_CONTAINER_PYTHON_RUNTIME) {
-    return new PythonContainer(runtime.__CODE_CONTAINER_PYTHON_RUNTIME);
+  if (runtime.__PYTHON_CODE_CONTAINER) {
+    return new PythonContainer(runtime.__PYTHON_CODE_CONTAINER);
   }
-
-  if (runtime.__CODE_CONTAINER_PYTHON_RUNTIME_PROMISE) {
-    const pyodide = await runtime.__CODE_CONTAINER_PYTHON_RUNTIME_PROMISE;
-    return new PythonContainer(pyodide);
-  }
-
-  runtime.__CODE_CONTAINER_PYTHON_RUNTIME_PROMISE = initializePythonRuntime();
 
   try {
-    const pyodide = await runtime.__CODE_CONTAINER_PYTHON_RUNTIME_PROMISE;
-    runtime.__CODE_CONTAINER_PYTHON_RUNTIME = pyodide;
-    delete runtime.__CODE_CONTAINER_PYTHON_RUNTIME_PROMISE;
-    return new PythonContainer(pyodide);
+    runtime.__PYTHON_CODE_CONTAINER = await initializePythonRuntime();
+    return new PythonContainer(runtime.__PYTHON_CODE_CONTAINER);
   } catch (error) {
-    delete runtime.__CODE_CONTAINER_PYTHON_RUNTIME_PROMISE;
+    console.log('Error booting Pyodide:', error);
     throw error;
   }
 }
@@ -30,13 +18,13 @@ export async function bootPyodide(): Promise<PythonContainer> {
 async function initializePythonRuntime(): Promise<PyodideInterface> {
   const pyodidePath = 'https://cdn.jsdelivr.net/pyodide/v0.25.1/full/';
 
-  if (!Environment.getWindow().loadPyodide) {
+  if (!runtime.loadPyodide) {
     throw new Error(
       'Pyodide script not loaded. Ensure PythonContainer component is rendered first.'
     );
   }
 
-  const pyodide = await Environment.getWindow().loadPyodide({
+  const pyodide = await runtime.loadPyodide({
     indexURL: pyodidePath,
   });
 
@@ -44,8 +32,8 @@ async function initializePythonRuntime(): Promise<PyodideInterface> {
 }
 
 export function resetPythonRuntime(): void {
-  delete runtime.__CODE_CONTAINER_PYTHON_RUNTIME;
-  delete runtime.__CODE_CONTAINER_PYTHON_RUNTIME_PROMISE;
+  delete runtime.__PYTHON_CODE_CONTAINER;
+  delete runtime.__PYTHON_CODE_CONTAINER_PROMISE;
 }
 
 // PythonContainer class
@@ -88,7 +76,10 @@ _stdout = sys.stdout
 sys.stdout = io.StringIO()
 
 try:
-${code.split('\n').map(line => '    ' + line).join('\n')}
+${code
+  .split('\n')
+  .map((line) => '    ' + line)
+  .join('\n')}
     _result = None
 except Exception as e:
     _result = str(e)

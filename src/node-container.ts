@@ -1,34 +1,25 @@
-import { WebContainer } from '@webcontainer/api';
+import { type BootOptions, WebContainer } from '@webcontainer/api';
+import { runtime } from './utils';
 
-// Runtime management - singleton pattern for bootstrap
-const runtime = globalThis as any;
-
-export async function bootWebContainer(): Promise<NodeContainer> {
-  if (runtime.__CODE_CONTAINER_NODE_RUNTIME) {
-    return new NodeContainer(runtime.__CODE_CONTAINER_NODE_RUNTIME);
+export async function bootWebContainer(
+  bootOption?: BootOptions
+): Promise<NodeContainer> {
+  if (runtime.__NODE_CODE_CONTAINER) {
+    return new NodeContainer(runtime.__NODE_CODE_CONTAINER);
   }
-
-  if (runtime.__CODE_CONTAINER_NODE_RUNTIME_PROMISE) {
-    const webContainer = await runtime.__CODE_CONTAINER_NODE_RUNTIME_PROMISE;
-    return new NodeContainer(webContainer);
-  }
-
-  runtime.__CODE_CONTAINER_NODE_RUNTIME_PROMISE = WebContainer.boot();
 
   try {
-    const webContainer = await runtime.__CODE_CONTAINER_NODE_RUNTIME_PROMISE;
-    runtime.__CODE_CONTAINER_NODE_RUNTIME = webContainer;
-    delete runtime.__CODE_CONTAINER_NODE_RUNTIME_PROMISE;
-    return new NodeContainer(webContainer);
+    runtime.__NODE_CODE_CONTAINER = await WebContainer.boot(bootOption);
+    return new NodeContainer(runtime.__NODE_CODE_CONTAINER);
   } catch (error) {
-    delete runtime.__CODE_CONTAINER_NODE_RUNTIME_PROMISE;
+    console.log('Error booting WebContainer:', error);
     throw error;
   }
 }
 
 export function resetNodeRuntime(): void {
-  delete runtime.__CODE_CONTAINER_NODE_RUNTIME;
-  delete runtime.__CODE_CONTAINER_NODE_RUNTIME_PROMISE;
+  delete runtime.__NODE_CODE_CONTAINER;
+  delete runtime.__NODE_CODE_CONTAINER_PROMISE;
 }
 
 // NodeContainer class
