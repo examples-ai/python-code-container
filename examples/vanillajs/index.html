@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Code Container Python Demo</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Inter', system-ui, sans-serif;
+        background-color: #1e1e1e;
+        color: #e0e0e0;
+        overflow: hidden;
+      }
+
+      #app {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        width: 100vw;
+      }
+
+      #toolbar {
+        display: flex;
+        gap: 10px;
+        padding: 10px;
+        background-color: #1e1e1e;
+        border-bottom: 1px solid #333;
+      }
+
+      button {
+        padding: 8px 16px;
+        background-color: #333;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      button:hover {
+        background-color: #444;
+      }
+
+      button.run-btn {
+        background-color: #28a745;
+        margin-left: auto;
+      }
+
+      button.run-btn:hover {
+        background-color: #218838;
+      }
+
+      #editor-container {
+        flex: 1 1 70%;
+        min-height: 0;
+        overflow: auto;
+      }
+
+      #console-container {
+        flex: 0 0 30%;
+        min-height: 200px;
+        display: flex;
+        flex-direction: column;
+        background-color: #1e1e1e;
+        border-top: 2px solid #333;
+      }
+
+      #console-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 12px;
+        background-color: #252526;
+        border-bottom: 1px solid #333;
+      }
+
+      #console-header span {
+        color: #e0e0e0;
+        font-weight: bold;
+        font-size: 14px;
+      }
+
+      #console-header button {
+        padding: 4px 12px;
+        font-size: 12px;
+      }
+
+      #console-output {
+        flex: 1;
+        overflow: auto;
+        padding: 8px;
+        font-family: 'Monaco', 'Courier New', monospace;
+        font-size: 13px;
+      }
+
+      .log-entry {
+        margin-bottom: 4px;
+        display: flex;
+        gap: 8px;
+      }
+
+      .log-time {
+        color: #666;
+        font-size: 11px;
+        min-width: 60px;
+      }
+
+      .log-type {
+        color: #888;
+      }
+
+      .log-message {
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .log-entry.error .log-message {
+        color: #ff6b6b;
+      }
+
+      .log-entry.info .log-message {
+        color: #4dabf7;
+      }
+
+      .log-entry.log .log-message {
+        color: #e0e0e0;
+      }
+
+      .empty-console {
+        color: #666;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app">
+      <div id="toolbar">
+        <span style="color: #e0e0e0; font-weight: bold; padding: 8px 16px"
+          >Python Editor</span
+        >
+        <button id="run-btn" class="run-btn">Run Code</button>
+      </div>
+      <div id="editor-container"></div>
+      <div id="console-container">
+        <div id="console-header">
+          <span>Console</span>
+          <button id="clear-btn">Clear</button>
+        </div>
+        <div id="console-output">
+          <div class="empty-console">
+            Console is empty. Run some code to see output here.
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/main.ts"></script>
+  </body>
+</html>
