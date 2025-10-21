@@ -1,12 +1,10 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "noEmit": false,
-    "outDir": "./dist",
+    "noEmit": true,
+    "emitDeclarationOnly": false,
+    "allowImportingTsExtensions": true,
     "rootDir": "./src",
-    "removeComments": true,
-    "sourceMap": true,
-    "noEmitOnError": true,
     "incremental": false
   },
   "include": ["src/**/*"],

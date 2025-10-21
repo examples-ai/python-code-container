@@ -1,7 +1,7 @@
 {
-  "name": "@examples-ai/code-container",
+  "name": "@examples-ai/python-code-container",
   "version": "1.0.0",
-  "description": "A browser-based code execution environment with TypeScript, Python, Node.js support and React bindings",
+  "description": "Python Code Container, wrapping of pyodide",
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -13,6 +13,11 @@
       "node": "./dist/index.js",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js",
+      "default": "./dist/react/index.js"
     }
   },
   "files": [
@@ -20,24 +25,17 @@
   ],
   "scripts": {
     "build": "vite build",
-    "dev": "vite build --watch",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "test:browser": "vitest run --config vitest.browser.config.ts",
-    "test:browser:watch": "vitest --config vitest.browser.config.ts",
-    "lint": "biome check src",
-    "lint:fix": "biome check --write src",
+    "test": "vitest",
+    "lint": "biome check --write src",
     "format": "biome format --write src",
-    "format:check": "biome format src",
     "clean": "rm -rf dist"
   },
   "keywords": [
     "code-container",
+    "python-code-container",
     "container",
-    "webcontainer",
     "pyodide",
     "python",
-    "javascript",
     "typescript",
     "browser",
     "execution",
@@ -47,31 +45,39 @@
   "author": "Jimmy Moon <ragingwind@gmail.com>",
   "license": "MIT",
   "packageManager": "pnpm@10.15.0",
-  "peerDependencies": {
-    "react": ">=16.8.0"
-  },
-  "peerDependenciesMeta": {
-    "react": {
-      "optional": true
-    }
-  },
   "devDependencies": {
     "@biomejs/biome": "^2.2.4",
-    "@testing-library/jest-dom": "^6.6.3",
-    "@testing-library/react": "^16.1.0",
     "@types/node": "^24.3.1",
-    "@types/react": "^19.0.1",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
     "@vitest/browser": "^3.2.4",
     "jsdom": "^26.0.0",
     "playwright": "^1.55.0",
-    "react": "^19.0.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "swr": "^2.3.6",
     "typescript": "^5.9.2",
     "vite": "^7.1.5",
     "vite-plugin-dts": "^4.5.4",
     "vitest": "^3.2.4"
   },
   "dependencies": {
-    "@webcontainer/api": "^1.6.1",
-    "swr": "^2.3.6"
+    "pyodide": "^0.28.3"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0",
+    "swr": "^2.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    },
+    "swr": {
+      "optional": true
+    }
   }
 }

@@ -1,74 +1,73 @@
-import type { PyodideInterface } from './types.js';
-import { runtime } from './utils.js';
+import { loadPyodide, type PyodideInterface } from 'pyodide';
 
-export async function bootPyodide(): Promise<PythonContainer> {
-  if (runtime.__PYTHON_CODE_CONTAINER) {
-    return new PythonContainer(runtime.__PYTHON_CODE_CONTAINER);
-  }
+export type BootOptions = Parameters<typeof loadPyodide>[0];
 
-  try {
-    runtime.__PYTHON_CODE_CONTAINER = await initializePythonRuntime();
-    return new PythonContainer(runtime.__PYTHON_CODE_CONTAINER);
-  } catch (error) {
-    console.log('Error booting Pyodide:', error);
-    throw error;
-  }
+export interface RunOptions {
+  packages?: string[];
+  homedir?: string;
+  enablePackageAutoInstall?: boolean;
+  filename?: string;
 }
 
-async function initializePythonRuntime(): Promise<PyodideInterface> {
-  const pyodidePath = 'https://cdn.jsdelivr.net/pyodide/v0.25.1/full/';
-
-  if (!runtime.loadPyodide) {
-    throw new Error(
-      'Pyodide script not loaded. Ensure PythonContainer component is rendered first.'
-    );
-  }
-
-  const pyodide = await runtime.loadPyodide({
-    indexURL: pyodidePath,
-  });
-
-  return pyodide;
-}
-
-export function resetPythonRuntime(): void {
-  delete runtime.__PYTHON_CODE_CONTAINER;
-  delete runtime.__PYTHON_CODE_CONTAINER_PROMISE;
-}
-
-// PythonContainer class
 export class PythonContainer {
-  private pyodide: PyodideInterface;
+  private static instance: PythonContainer | null = null;
+  private static pyodide: PyodideInterface | null = null;
 
-  constructor(pyodide: PyodideInterface) {
-    this.pyodide = pyodide;
+  private constructor() {}
+
+  static async boot(options: BootOptions = {}): Promise<PythonContainer> {
+    if (PythonContainer.instance && PythonContainer.pyodide) {
+      return PythonContainer.instance;
+    }
+
+    try {
+      PythonContainer.pyodide = await loadPyodide(options);
+      PythonContainer.instance = new PythonContainer();
+      return PythonContainer.instance;
+    } catch (error) {
+      console.log('Error booting Pyodide:', error);
+      throw error;
+    }
   }
 
-  async run(
-    code: string,
-    options: {
-      packages?: string[];
-      homedir?: string;
-      enablePackageAutoInstall?: boolean;
-      filename?: string;
-    } = {}
-  ): Promise<any> {
-    // Set up environment if needed
+  static teardown(): void {
+    PythonContainer.instance = null;
+    PythonContainer.pyodide = null;
+  }
+
+  private getPyodide(): PyodideInterface {
+    if (!PythonContainer.pyodide) {
+      throw new Error(
+        'Pyodide not initialized. Call PythonContainer.boot() first.'
+      );
+    }
+    return PythonContainer.pyodide;
+  }
+
+  private setupHomedir(homedir: string): void {
+    try {
+      this.getPyodide().FS.mkdir(homedir);
+      this.getPyodide().runPython(`
+import os
+os.chdir('${homedir}')
+`);
+    } catch (_error) {
+      // Directory may already exist
+    }
+  }
+
+  async run(code: string, options: RunOptions = {}): Promise<any> {
     if (options.homedir || options.packages) {
       await this.setupPythonEnvironment(options);
     }
 
-    // Auto-install packages if enabled (default: true)
     const enableAutoInstall = options.enablePackageAutoInstall !== false;
     if (enableAutoInstall) {
       try {
-        await this.pyodide.loadPackagesFromImports(code);
-      } catch (_error) {
-        // Package auto-installation failed, continue execution
-      }
+        await this.getPyodide().loadPackagesFromImports(code);
+      } catch (_error) {}
     }
 
-    // Capture stdout for print statements
     const captureCode = `
 import sys
 import io
@@ -88,11 +87,10 @@ finally:
     _output = sys.stdout.getvalue()
     sys.stdout = _stdout
 
-# Return both output and result
 (_output, _result)
 `;
 
-    const result = await this.pyodide.runPythonAsync(captureCode);
+    const result = await this.getPyodide().runPythonAsync(captureCode);
     const [output, error] = result;
 
     if (error && error !== 'None') {
@@ -108,12 +106,11 @@ finally:
       homedir?: string;
     } = {}
   ): Promise<void> {
-    // Set up environment if needed
     if (options.homedir) {
       await this.setupPythonEnvironment({ homedir: options.homedir });
     }
 
-    await this.pyodide.loadPackage(packageName);
+    await this.getPyodide().loadPackage(packageName);
   }
 
   readFile(
@@ -123,20 +120,11 @@ finally:
       homedir?: string;
     } = {}
   ): string | Uint8Array {
-    // Set up homedir if specified
     if (options.homedir) {
-      try {
-        this.pyodide.FS.mkdir(options.homedir);
-        this.pyodide.runPython(`
-import os
-os.chdir('${options.homedir}')
-`);
-      } catch (_error) {
-        // Directory may already exist or be set
-      }
+      this.setupHomedir(options.homedir);
     }
 
-    return this.pyodide.FS.readFile(path, {
+    return this.getPyodide().FS.readFile(path, {
       encoding: encoding === 'binary' ? undefined : encoding,
     });
   }
@@ -148,67 +136,66 @@ os.chdir('${options.homedir}')
       homedir?: string;
     } = {}
   ): void {
-    // Set up homedir if specified
     if (options.homedir) {
-      try {
-        this.pyodide.FS.mkdir(options.homedir);
-        this.pyodide.runPython(`
-import os
-os.chdir('${options.homedir}')
-`);
-      } catch (_error) {
-        // Directory may already exist or be set
-      }
+      this.setupHomedir(options.homedir);
     }
 
-    this.pyodide.FS.writeFile(path, content);
+    this.getPyodide().FS.writeFile(path, content);
   }
 
-  // Register JavaScript module in Python
-  registerJsModule(name: string, module: any): void {
-    this.pyodide.registerJsModule(name, module);
+  readdir(
+    path: string,
+    options: {
+      homedir?: string;
+    } = {}
+  ): string[] {
+    if (options.homedir) {
+      this.setupHomedir(options.homedir);
+    }
+
+    return this.getPyodide().FS.readdir(path);
   }
 
-  // Unregister JavaScript module from Python
-  unregisterJsModule(name: string): void {
-    this.pyodide.unregisterJsModule(name);
+  rm(
+    path: string,
+    options: {
+      homedir?: string;
+    } = {}
+  ): void {
+    if (options.homedir) {
+      this.setupHomedir(options.homedir);
+    }
+
+    this.getPyodide().FS.unlink(path);
   }
 
-  // Convert JavaScript object to Python
-  toPython(obj: any): any {
-    return this.pyodide.toPy(obj);
+  mkdir(
+    path: string,
+    options: {
+      homedir?: string;
+    } = {}
+  ): void {
+    if (options.homedir) {
+      this.setupHomedir(options.homedir);
+    }
+
+    this.getPyodide().FS.mkdir(path);
   }
 
-  // Get/Set Python globals
-  getPythonGlobal(name: string): any {
-    return this.pyodide.globals.get(name);
+  get globals(): any {
+    return this.getPyodide().globals;
   }
 
-  setPythonGlobal(name: string, value: any): void {
-    this.pyodide.globals.set(name, value);
-  }
-
-  // Setup Python environment with working directory and packages
   private async setupPythonEnvironment(options: {
     homedir?: string;
     packages?: string[];
   }): Promise<void> {
-    // Set up working directory
     if (options.homedir) {
-      try {
-        this.pyodide.FS.mkdir(options.homedir);
-        await this.pyodide.runPythonAsync(`
-import os
-os.chdir('${options.homedir}')
-`);
-      } catch (_error) {
-        // Directory may already exist
-      }
+      this.setupHomedir(options.homedir);
     }
 
-    // Load initial packages
     if (options.packages && options.packages.length > 0) {
-      await this.pyodide.loadPackage(options.packages);
+      await this.getPyodide().loadPackage(options.packages);
     }
   }
 }

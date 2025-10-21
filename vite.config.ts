@@ -1,35 +1,32 @@
-import { defineConfig } from 'vite'
-import { resolve } from 'path'
-import dts from 'vite-plugin-dts'
+import { defineConfig } from 'vite';
+import { resolve } from 'node:path';
+import dts from 'vite-plugin-dts';
 
 export default defineConfig({
   plugins: [dts()],
   build: {
     lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
-      name: 'CodeContainer',
-      fileName: 'index',
-      formats: ['es']
+      entry: {
+        index: resolve(__dirname, 'src/index.ts'),
+        'react/index': resolve(__dirname, 'src/react/index.ts'),
+      },
+      formats: ['es'],
     },
     rollupOptions: {
-      external: ['@webcontainer/api', 'react', 'react-dom'],
+      external: ['pyodide', 'react', 'react-dom', 'swr'],
       output: {
-        globals: {
-          '@webcontainer/api': 'WebContainerApi',
-          'react': 'React',
-          'react-dom': 'ReactDOM'
-        }
-      }
+        preserveModules: false,
+      },
     },
     outDir: 'dist',
-    emptyOutDir: true
+    emptyOutDir: true,
   },
   esbuild: {
-    target: 'es2020'
+    target: 'es2020',
   },
   test: {
     environment: 'node',
     exclude: ['**/browser.test.ts', '**/node_modules/**'],
-    include: ['tests/container.test.ts']
-  }
-})
+    include: ['tests/container.test.ts'],
+  },
+});
