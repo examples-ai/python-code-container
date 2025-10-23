@@ -11,6 +11,7 @@ export interface RunOptions {
 
 export class PythonContainer {
   private static instance: PythonContainer | null = null;
+  private static booting: Promise<PythonContainer> | null = null;
   private static pyodide: PyodideInterface | null = null;
 
   private constructor() {}
@@ -20,14 +21,25 @@ export class PythonContainer {
       return PythonContainer.instance;
     }
 
-    try {
-      PythonContainer.pyodide = await loadPyodide(options);
-      PythonContainer.instance = new PythonContainer();
-      return PythonContainer.instance;
-    } catch (error) {
-      console.log('Error booting Pyodide:', error);
-      throw error;
+    // Wait for existing boot promise
+    if (PythonContainer.booting) {
+      return PythonContainer.booting;
     }
+
+    PythonContainer.booting = (async () => {
+      try {
+        PythonContainer.pyodide = await loadPyodide(options);
+        PythonContainer.instance = new PythonContainer();
+        PythonContainer.booting = null;
+        return PythonContainer.instance;
+      } catch (error) {
+        console.log('Error booting Pyodide:', error);
+        PythonContainer.booting = null;
+        throw error;
+      }
+    })();
+
+    return PythonContainer.booting;
   }
 
   static teardown(): void {
