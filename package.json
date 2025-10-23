@@ -1,6 +1,6 @@
 {
   "name": "@examples-ai/python-code-container",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Python Code Container, wrapping of pyodide",
   "type": "module",
   "main": "./dist/index.js",
